@@ -1,10 +1,16 @@
 import 'package:get_it/get_it.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../services/biometric_service.dart';
 import '../../domain/repositories/card_repository.dart';
-import '../../data/repositories/mock_card_repository.dart';
+import '../../domain/repositories/i_auth_repository.dart';
+import '../../data/repositories/firestore_card_repository.dart';
+import '../../data/repositories/firebase_auth_repository.dart';
 import '../../presentation/bloc/theme/theme_bloc.dart';
 import '../../presentation/bloc/feed/feed_bloc.dart';
+import '../../presentation/bloc/auth/auth_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -13,11 +19,29 @@ Future<void> setupDependencies() async {
   // Core Services - Singleton
   getIt.registerLazySingleton<BiometricService>(() => BiometricService());
 
-  // Repositories - Lazy Singleton
-  getIt.registerLazySingleton<ICardRepository>(() => MockCardRepository());
+  // Initialize Google Sign-In (v7.x requires initialization)
+  await GoogleSignIn.instance.initialize();
+
+  // Firebase Auth Repository - Singleton (using GoogleSignIn.instance)
+  getIt.registerLazySingleton<IAuthRepository>(
+    () => FirebaseAuthRepository(FirebaseAuth.instance, GoogleSignIn.instance),
+  );
+
+  // Firestore Card Repository - Singleton
+  getIt.registerLazySingleton<ICardRepository>(
+    () => FirestoreCardRepository(
+      firestore: FirebaseFirestore.instance,
+      authRepository: getIt<IAuthRepository>(),
+    ),
+  );
 
   // BLoCs - Factory (new instance per request)
   getIt.registerFactory<ThemeBloc>(() => ThemeBloc());
+
+  getIt.registerFactory<AuthBloc>(
+    () => AuthBloc(authRepository: getIt<IAuthRepository>()),
+  );
+
   getIt.registerFactory<FeedBloc>(
     () => FeedBloc(
       cardRepository: getIt<ICardRepository>(),

@@ -22,7 +22,3 @@ class SwipeCard extends FeedEvent {
   @override
   List<Object?> get props => [cardId, interaction];
 }
-
-class CardDisplayed extends FeedEvent {
-  const CardDisplayed();
-}

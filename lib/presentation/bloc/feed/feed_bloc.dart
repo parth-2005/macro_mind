@@ -15,7 +15,6 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
     : super(const FeedInitial()) {
     on<LoadCards>(_onLoadCards);
     on<SwipeCard>(_onSwipeCard);
-    on<CardDisplayed>(_onCardDisplayed);
   }
 
   Future<void> _onLoadCards(LoadCards event, Emitter<FeedState> emit) async {
@@ -67,13 +66,5 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
       debugPrint('[FeedBloc] Error submitting swipe: $e');
       emit(FeedError('Failed to submit interaction: $e'));
     }
-  }
-
-  Future<void> _onCardDisplayed(
-    CardDisplayed event,
-    Emitter<FeedState> emit,
-  ) async {
-    // Start recording when a new card is displayed
-    biometricService.startRecording();
   }
 }

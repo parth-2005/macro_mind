@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'core/di/injection.dart';
 import 'core/theme/app_theme.dart';
 import 'presentation/bloc/theme/theme_bloc.dart';
 import 'presentation/bloc/theme/theme_state.dart';
 import 'presentation/bloc/feed/feed_bloc.dart';
+import 'presentation/bloc/auth/auth_bloc.dart';
+import 'presentation/bloc/auth/auth_event.dart';
+import 'presentation/bloc/auth/auth_state.dart';
 import 'presentation/screens/home/home_screen.dart';
+import 'presentation/screens/auth/login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -20,16 +29,22 @@ void main() async {
   // Setup dependency injection
   await setupDependencies();
 
-  runApp(const CrowdPulseApp());
+  runApp(const MacroMindApp());
 }
 
-class CrowdPulseApp extends StatelessWidget {
-  const CrowdPulseApp({Key? key}) : super(key: key);
+class MacroMindApp extends StatelessWidget {
+  const MacroMindApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        // Auth BLoC - manages authentication state
+        BlocProvider<AuthBloc>(
+          create: (context) =>
+              getIt<AuthBloc>()..add(const AuthCheckRequested()),
+        ),
+
         // Theme BLoC - manages light/dark mode
         BlocProvider<ThemeBloc>(create: (context) => getIt<ThemeBloc>()),
 
@@ -39,7 +54,7 @@ class CrowdPulseApp extends StatelessWidget {
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) {
           return MaterialApp(
-            title: 'CrowdPulse',
+            title: 'MacroMind',
             debugShowCheckedModeBanner: false,
 
             // Theme Configuration
@@ -47,8 +62,17 @@ class CrowdPulseApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: themeState.themeMode,
 
-            // Home Screen
-            home: const HomeScreen(),
+            // Routing based on auth state
+            home: BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, authState) {
+                if (authState is AuthAuthenticated) {
+                  return const HomeScreen();
+                } else {
+                  // Show login screen if not authenticated
+                  return const LoginScreen();
+                }
+              },
+            ),
           );
         },
       ),

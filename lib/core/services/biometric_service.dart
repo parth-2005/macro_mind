@@ -31,17 +31,28 @@ class BiometricService {
   Future<void> initialize() async {
     debugPrint('[BiometricService] Initializing Ghost Protocol...');
 
-    // Start listening to gyroscope
-    _gyroSubscription = gyroscopeEventStream().listen((event) {
-      if (_isRecording) {
-        // Calculate magnitude of gyroscope vector
-        final magnitude =
-            (event.x * event.x + event.y * event.y + event.z * event.z);
-        _gyroReadings.add(magnitude);
-      }
-    });
+    try {
+      // Start listening to gyroscope
+      _gyroSubscription = gyroscopeEventStream().listen(
+        (event) {
+          if (_isRecording) {
+            // Calculate magnitude of gyroscope vector
+            final magnitude =
+                (event.x * event.x + event.y * event.y + event.z * event.z);
+            _gyroReadings.add(magnitude);
+          }
+        },
+        onError: (error) {
+          debugPrint('[BiometricService] Gyroscope error: $error');
+        },
+      );
 
-    debugPrint('[BiometricService] Ghost Protocol initialized');
+      debugPrint('[BiometricService] Ghost Protocol initialized');
+    } catch (e) {
+      debugPrint('[BiometricService] Gyroscope unavailable: $e');
+      debugPrint('[BiometricService] Continuing without gyroscope data');
+      // App continues to function without gyroscope
+    }
   }
 
   /// Start recording for a new card interaction
