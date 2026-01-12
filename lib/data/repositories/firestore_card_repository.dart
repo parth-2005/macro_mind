@@ -5,6 +5,7 @@ import '../../domain/entities/card_entity.dart';
 import '../../domain/entities/interaction_entity.dart';
 import '../../domain/repositories/card_repository.dart';
 import '../../domain/repositories/i_auth_repository.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../models/card_model.dart';
 import '../models/interaction_model.dart';
 
@@ -64,6 +65,10 @@ class FirestoreCardRepository implements ICardRepository {
       final interactionModel = InteractionModel.fromEntity(interaction);
       final data = interactionModel.toJson();
 
+      // Get dynamic version info
+      final packageInfo = await PackageInfo.fromPlatform();
+      final version = '${packageInfo.version}+${packageInfo.buildNumber}';
+
       // Enrich with security metadata
       final enrichedPayload = {
         ...data,
@@ -71,7 +76,7 @@ class FirestoreCardRepository implements ICardRepository {
         'cardId': cardId,
         'timestamp':
             FieldValue.serverTimestamp(), // Server timestamp prevents manipulation
-        'appVersion': '1.0.0+1', // From pubspec.yaml
+        'appVersion': version, // Dynamic versioning
       };
 
       // Submit to interactions collection

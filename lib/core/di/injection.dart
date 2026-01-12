@@ -19,12 +19,13 @@ Future<void> setupDependencies() async {
   // Core Services - Singleton
   getIt.registerLazySingleton<BiometricService>(() => BiometricService());
 
-  // Initialize Google Sign-In (v7.x requires initialization)
-  await GoogleSignIn.instance.initialize();
+  // Google Sign-In (v7.x requires singleton access and initialization)
+  final googleSignIn = GoogleSignIn.instance;
+  await googleSignIn.initialize();
 
-  // Firebase Auth Repository - Singleton (using GoogleSignIn.instance)
+  // Firebase Auth Repository - Singleton
   getIt.registerLazySingleton<IAuthRepository>(
-    () => FirebaseAuthRepository(FirebaseAuth.instance, GoogleSignIn.instance),
+    () => FirebaseAuthRepository(FirebaseAuth.instance, googleSignIn),
   );
 
   // Firestore Card Repository - Singleton

@@ -46,5 +46,6 @@ app.*.map.json
 
 # remove firebase related files
 firebase.json
-firebase*
+.firebase/
 google-services.json
+GoogleService-Info.plist

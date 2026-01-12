@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/di/injection.dart';
 import '../../../core/services/biometric_service.dart';
@@ -8,12 +9,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../bloc/feed/feed_bloc.dart';
 import '../../bloc/feed/feed_event.dart';
 import '../../bloc/feed/feed_state.dart';
-import '../../bloc/theme/theme_bloc.dart';
-import '../../bloc/theme/theme_event.dart';
-import '../../bloc/theme/theme_state.dart';
 import '../../widgets/market_research_card.dart';
+import '../../widgets/background_grid.dart';
 
-/// Home Screen - Main Market Research Feed
+/// Home Screen - Clean Mass-Market Feed Interface
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -41,279 +40,196 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.poll_rounded,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(width: 12),
-            const Text('CrowdPulse'),
-          ],
+        title: Text(
+          'MacroMind',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+          ),
         ),
         actions: [
-          // Theme Toggle
           IconButton(
-            icon: BlocBuilder<ThemeBloc, ThemeState>(
-              builder: (context, state) {
-                return Icon(
-                  state.themeMode == ThemeMode.light
-                      ? Icons.dark_mode_rounded
-                      : Icons.light_mode_rounded,
-                );
-              },
-            ),
+            icon: const Icon(Icons.account_circle_outlined),
             onPressed: () {
-              context.read<ThemeBloc>().add(const ToggleTheme());
+              // Profile action
             },
-            tooltip: 'Toggle Theme',
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: BlocBuilder<FeedBloc, FeedState>(
-        builder: (context, state) {
-          if (state is FeedLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (state is FeedError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline_rounded,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Oops! Something went wrong',
-                      style: Theme.of(context).textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.message,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        context.read<FeedBloc>().add(const LoadCards());
-                      },
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('Try Again'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          if (state is FeedEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline_rounded,
-                      size: 80,
-                      color: AppTheme.successColor,
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'All Done!',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'You\'ve reviewed all available questions.',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Total responses: ${state.totalSwipes}',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          if (state is FeedLoaded) {
+      body: BackgroundGrid(
+        child: BlocBuilder<FeedBloc, FeedState>(
+          builder: (context, state) {
             return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    // Progress Indicator
-                    _ProgressBar(
-                      current: state.currentIndex,
-                      total: state.cards.length,
-                    ),
-                    const SizedBox(height: 16),
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
 
-                    // Card Swiper
-                    Expanded(
-                      child: Listener(
-                        onPointerDown: (details) {
-                          _biometricService.recordTouchPoint(
-                            details.localPosition,
+                  // 2. Feed Content
+                  Expanded(
+                    child: Builder(
+                      builder: (context) {
+                        if (state is FeedLoading) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
                           );
-                        },
-                        onPointerMove: (details) {
-                          _biometricService.recordTouchPoint(
-                            details.localPosition,
-                          );
-                        },
-                        child: CardSwiper(
-                          key: ValueKey('swiper_${state.currentIndex}'),
-                          controller: _swiperController,
-                          cardsCount: state.cards.length - state.currentIndex,
-                          numberOfCardsDisplayed:
-                              (state.cards.length - state.currentIndex).clamp(
-                                1,
-                                2,
-                              ),
-                          backCardOffset: const Offset(0.0, 20.0),
-                          padding: EdgeInsets.zero,
-                          duration: const Duration(milliseconds: 300),
-                          cardBuilder:
-                              (
-                                context,
-                                index,
-                                percentThresholdX,
-                                percentThresholdY,
-                              ) {
-                                final actualIndex = state.currentIndex + index;
+                        }
 
-                                // Bounds check to prevent RangeError
-                                if (actualIndex >= state.cards.length) {
-                                  return const SizedBox.shrink();
-                                }
+                        if (state is FeedError) {
+                          return _buildErrorState(context, state);
+                        }
 
-                                final card = state.cards[actualIndex];
+                        if (state is FeedEmpty) {
+                          return _buildEmptyState(context, state);
+                        }
 
-                                return Stack(
-                                  children: [
-                                    MarketResearchCard(card: card),
+                        if (state is FeedLoaded) {
+                          return _buildFeed(context, state);
+                        }
 
-                                    // Swipe Overlay
-                                    if (percentThresholdX != 0 ||
-                                        percentThresholdY != 0)
-                                      _SwipeOverlay(
-                                        percentX: percentThresholdX,
-                                        percentY: percentThresholdY,
-                                      ),
-                                  ],
-                                );
-                              },
-                          onSwipe: (previousIndex, currentIndex, direction) {
-                            final actualIndex =
-                                state.currentIndex + previousIndex;
-
-                            // Bounds check
-                            if (actualIndex >= state.cards.length) {
-                              debugPrint(
-                                '[HomeScreen] Out of bounds: $actualIndex >= ${state.cards.length}',
-                              );
-                              return false;
-                            }
-
-                            final card = state.cards[actualIndex];
-                            final swipedRight =
-                                direction == CardSwiperDirection.right;
-
-                            // Stop recording and get interaction data
-                            final interaction = _biometricService.stopRecording(
-                              swipedRight: swipedRight,
-                            );
-
-                            if (interaction != null) {
-                              context.read<FeedBloc>().add(
-                                SwipeCard(
-                                  cardId: card.id,
-                                  interaction: interaction,
-                                ),
-                              );
-                            }
-
-                            return true;
-                          },
-                        ),
-                      ),
+                        return const SizedBox.shrink();
+                      },
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
-          }
+          },
+        ),
+      ),
+    );
+  }
 
-          return const SizedBox.shrink();
-        },
+  Widget _buildFeed(BuildContext context, FeedLoaded state) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Listener(
+        onPointerDown: (details) =>
+            _biometricService.recordTouchPoint(details.localPosition),
+        onPointerMove: (details) =>
+            _biometricService.recordTouchPoint(details.localPosition),
+        child: CardSwiper(
+          key: ValueKey('swiper_${state.currentIndex}'),
+          controller: _swiperController,
+          cardsCount: state.cards.length - state.currentIndex,
+          numberOfCardsDisplayed: (state.cards.length - state.currentIndex)
+              .clamp(1, 2),
+          backCardOffset: const Offset(0.0, 30.0),
+          padding: EdgeInsets.zero,
+          duration: const Duration(milliseconds: 400),
+          cardBuilder: (context, index, percentThresholdX, percentThresholdY) {
+            final actualIndex = state.currentIndex + index;
+            if (actualIndex >= state.cards.length) {
+              return const SizedBox.shrink();
+            }
+            final card = state.cards[actualIndex];
+
+            return Stack(
+              children: [
+                MarketResearchCard(card: card),
+                if (percentThresholdX != 0 || percentThresholdY != 0)
+                  _SwipeOverlay(
+                    percentX: percentThresholdX,
+                    percentY: percentThresholdY,
+                  ),
+              ],
+            );
+          },
+          onSwipe: (previousIndex, currentIndex, direction) {
+            final actualIndex = state.currentIndex + previousIndex;
+            if (actualIndex >= state.cards.length) return false;
+
+            final card = state.cards[actualIndex];
+            final swipedRight = direction == CardSwiperDirection.right;
+
+            final interaction = _biometricService.stopRecording(
+              swipedRight: swipedRight,
+            );
+
+            if (interaction != null) {
+              context.read<FeedBloc>().add(
+                SwipeCard(cardId: card.id, interaction: interaction),
+              );
+            }
+            return true;
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, FeedError state) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline_rounded,
+              color: AppTheme.noColor,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Oops! Something went wrong',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () => context.read<FeedBloc>().add(const LoadCards()),
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, FeedEmpty state) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.check_circle_rounded,
+              color: AppTheme.yesColor,
+              size: 64,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'All dossiers reviewed',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Thank you for participating in this research study.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 40),
+            Text(
+              'TOTAL RESPONSES: ${state.totalSwipes}',
+              style: theme.textTheme.labelSmall?.copyWith(letterSpacing: 2),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-/// Progress Bar Widget
-class _ProgressBar extends StatelessWidget {
-  final int current;
-  final int total;
-
-  const _ProgressBar({required this.current, required this.total});
-
-  @override
-  Widget build(BuildContext context) {
-    final progress = current.toDouble() / total.toDouble();
-
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Progress', style: Theme.of(context).textTheme.labelMedium),
-            Text(
-              '$current / $total',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 8,
-            backgroundColor: Theme.of(context).dividerColor,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              Theme.of(context).colorScheme.primary,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Swipe Overlay Widget
 class _SwipeOverlay extends StatelessWidget {
   final num percentX;
   final num percentY;
@@ -324,31 +240,21 @@ class _SwipeOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     final isRight = percentX > 0;
     final opacity = ((percentX.abs() * 2).clamp(0.0, 1.0)).toDouble();
+    final color = isRight ? AppTheme.yesColor : AppTheme.noColor;
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          begin: isRight ? Alignment.centerLeft : Alignment.centerRight,
-          end: isRight ? Alignment.centerRight : Alignment.centerLeft,
-          colors: [
-            (isRight ? AppTheme.yesColor : AppTheme.noColor).withOpacity(
-              opacity * 0.3,
-            ),
-            (isRight ? AppTheme.yesColor : AppTheme.noColor).withOpacity(
-              opacity * 0.1,
-            ),
-          ],
-        ),
+        borderRadius: BorderRadius.circular(20),
+        color: color.withOpacity(opacity * 0.1),
       ),
       child: Center(
         child: Opacity(
           opacity: opacity,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             decoration: BoxDecoration(
-              color: isRight ? AppTheme.yesColor : AppTheme.noColor,
-              borderRadius: BorderRadius.circular(12),
+              color: color,
+              borderRadius: BorderRadius.circular(100),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -356,16 +262,15 @@ class _SwipeOverlay extends StatelessWidget {
                 Icon(
                   isRight ? Icons.check_rounded : Icons.close_rounded,
                   color: Colors.white,
-                  size: 32,
+                  size: 28,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Text(
-                  isRight ? 'YES' : 'NO',
-                  style: const TextStyle(
+                  isRight ? 'AGREE' : 'DISAGREE',
+                  style: GoogleFonts.inter(
                     color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],

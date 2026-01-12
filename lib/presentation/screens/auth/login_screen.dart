@@ -2,140 +2,113 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
 import '../../bloc/auth/auth_state.dart';
+import '../../widgets/background_grid.dart';
 
-/// Login screen with Google Sign-In
+/// Login screen - Clean, Trustworthy Mass-Market UI
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
-      body: BlocConsumer<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthError) {
-            // Show error message
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red.shade700,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          final isLoading = state is AuthLoading;
+      backgroundColor: Colors.transparent,
+      body: BackgroundGrid(
+        child: BlocConsumer<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: AppTheme.noColor,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          },
+          builder: (context, state) {
+            final isLoading = state is AuthLoading;
+            final theme = Theme.of(context);
 
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark
-                    ? [const Color(0xFF1A1A2E), const Color(0xFF0F0F1E)]
-                    : [const Color(0xFFF8F9FA), const Color(0xFFE9ECEF)],
-              ),
-            ),
-            child: SafeArea(
+            return SafeArea(
               child: Center(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 32.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // App Logo/Icon
+                      // Simple, Friendly Icon/Logo
                       Container(
-                        width: 120,
-                        height: 120,
+                        width: 100,
+                        height: 100,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              const Color(0xFF5E35B1),
-                              const Color(0xFF7E57C2),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF5E35B1).withOpacity(0.3),
-                              blurRadius: 20,
-                              spreadRadius: 5,
-                            ),
-                          ],
+                          color: AppTheme.primaryBlue.withOpacity(0.1),
+                          shape: BoxShape.circle,
                         ),
                         child: const Icon(
-                          Icons.insights_rounded,
-                          size: 64,
-                          color: Colors.white,
+                          Icons.poll_rounded,
+                          size: 50,
+                          color: AppTheme.primaryBlue,
                         ),
                       ),
 
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 32),
 
-                      // App Name
+                      // Brand Identity
                       Text(
                         'MacroMind',
-                        style: GoogleFonts.poppins(
-                          fontSize: 42,
-                          fontWeight: FontWeight.bold,
-                          foreground: Paint()
-                            ..shader = LinearGradient(
-                              colors: [
-                                const Color(0xFF5E35B1),
-                                const Color(0xFF7E57C2),
-                              ],
-                            ).createShader(const Rect.fromLTWH(0, 0, 200, 70)),
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.textPrimary,
+                          letterSpacing: -1,
                         ),
                       ),
 
                       const SizedBox(height: 12),
 
-                      // Tagline
                       Text(
-                        'Crowd Intelligence & Market Research',
+                        'Insights for a better tomorrow.',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          color: isDark
-                              ? Colors.white.withOpacity(0.7)
-                              : Colors.black.withOpacity(0.6),
-                          letterSpacing: 0.5,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: AppTheme.textSecondary,
                         ),
                       ),
 
                       const SizedBox(height: 60),
 
-                      // Sign in with Google Button
+                      // Professional Auth Button
                       _GoogleSignInButton(isLoading: isLoading),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 48),
 
-                      // Privacy note
-                      Text(
-                        'We respect your privacy.\nYour data is encrypted and secure.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: isDark
-                              ? Colors.white.withOpacity(0.5)
-                              : Colors.black.withOpacity(0.4),
-                          height: 1.5,
-                        ),
+                      // Privacy/Trust Section
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.shield_outlined,
+                            size: 16,
+                            color: AppTheme.textDisabled,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Your data is private and secure.',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -148,58 +121,44 @@ class _GoogleSignInButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: isLoading
+    return InkWell(
+      onTap: isLoading
           ? null
-          : () {
-              context.read<AuthBloc>().add(const SignInWithGoogleRequested());
-            },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+          : () =>
+                context.read<AuthBloc>().add(const SignInWithGoogleRequested()),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        elevation: 4,
-        shadowColor: Colors.black26,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        minimumSize: const Size(double.infinity, 56),
-      ),
-      child: isLoading
-          ? const SizedBox(
-              height: 24,
-              width: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.black54),
-              ),
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Google Logo
-                Image.asset(
-                  'assets/google_logo.png',
-                  height: 24,
-                  width: 24,
-                  errorBuilder: (context, error, stackTrace) {
-                    // Fallback to icon if asset not found
-                    return const Icon(
-                      Icons.login,
-                      size: 24,
-                      color: Colors.black87,
-                    );
-                  },
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  'Sign in with Google',
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+        decoration: BoxDecoration(
+          border: Border.all(color: AppTheme.borderLight),
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+        ),
+        child: isLoading
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.login_rounded,
+                    color: AppTheme.textSecondary,
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 16),
+                  Text(
+                    'Continue with Google',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+      ),
     );
   }
 }
