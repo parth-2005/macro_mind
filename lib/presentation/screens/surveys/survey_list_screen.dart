@@ -1,7 +1,8 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
+import 'package:confetti/confetti.dart';
 import '../../bloc/survey/survey_bloc.dart';
 import '../../bloc/survey/survey_event.dart';
 import '../../bloc/survey/survey_state.dart';
@@ -15,12 +16,21 @@ class SurveyListScreen extends StatefulWidget {
 }
 
 class _SurveyListScreenState extends State<SurveyListScreen> {
-  bool _showConfetti = false;
+  late ConfettiController _confettiController;
 
   @override
   void initState() {
     super.initState();
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 2),
+    );
     context.read<SurveyBloc>().add(LoadSurveys());
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
   }
 
   void _startSurvey(SurveyEntity survey) {
@@ -30,37 +40,52 @@ class _SurveyListScreenState extends State<SurveyListScreen> {
         builder: (context) => SurveyFormScreen(
           survey: survey,
           onComplete: (earnedPoints) {
-            setState(() => _showConfetti = true);
-            Future.delayed(const Duration(seconds: 4), () {
-              if (mounted) setState(() => _showConfetti = false);
-            });
+            // Bloc handles state, but we can also trigger local UI here if needed.
+            // However, the listener on Bloc is cleaner.
           },
         ),
       ),
     );
   }
 
+  List<SurveyEntity> _lastSurveys = [];
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Taste Tests',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w800),
+    return BlocListener<SurveyBloc, SurveyState>(
+      listener: (context, state) {
+        if (state is SurveySuccess) {
+          _confettiController.play();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('+500 Points Added!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Taste Tests',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w800),
+          ),
         ),
-      ),
-      body: BlocBuilder<SurveyBloc, SurveyState>(
-        builder: (context, state) {
-          if (state is SurveyLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+        body: BlocBuilder<SurveyBloc, SurveyState>(
+          builder: (context, state) {
+            if (state is SurveyLoading && _lastSurveys.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (state is SurveyError) {
-            return Center(child: Text('Error: ${state.message}'));
-          }
+            if (state is SurveyError && _lastSurveys.isEmpty) {
+              return Center(child: Text('Error: ${state.message}'));
+            }
 
-          if (state is SurveyLoaded) {
-            if (state.surveys.isEmpty) {
+            if (state is SurveyLoaded) {
+              _lastSurveys = state.surveys;
+            }
+
+            if (_lastSurveys.isEmpty && state is! SurveyLoading) {
               return const Center(
                 child: Text('No surveys available right now.'),
               );
@@ -70,55 +95,39 @@ class _SurveyListScreenState extends State<SurveyListScreen> {
               children: [
                 ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: state.surveys.length,
+                  itemCount: _lastSurveys.length,
                   itemBuilder: (context, index) {
-                    final survey = state.surveys[index];
+                    final survey = _lastSurveys[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: _buildSurveyCard(survey),
                     );
                   },
                 ),
-                if (_showConfetti)
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Lottie.network(
-                          'https://assets9.lottiefiles.com/packages/lf20_myej9h9g.json',
-                          repeat: false,
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            'Points Unlocked!',
-                            style: GoogleFonts.inter(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: ConfettiWidget(
+                    confettiController: _confettiController,
+                    blastDirection: -pi / 2, // Up
+                    emissionFrequency: 0.05,
+                    numberOfParticles: 20,
+                    maxBlastForce: 100,
+                    minBlastForce: 80,
+                    gravity: 0.3,
+                    shouldLoop: false,
+                    colors: const [
+                      Colors.green,
+                      Colors.blue,
+                      Colors.pink,
+                      Colors.orange,
+                      Colors.purple,
+                    ],
                   ),
+                ),
               ],
             );
-          }
-
-          return const Center(child: Text('Start exploring surveys!'));
-        },
+          },
+        ),
       ),
     );
   }
@@ -140,7 +149,7 @@ class _SurveyListScreenState extends State<SurveyListScreen> {
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.blue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -218,20 +227,33 @@ class _SurveyFormScreenState extends State<SurveyFormScreen> {
                         if (question.type ==
                                 SurveyQuestionType.multipleChoice ||
                             question.type == SurveyQuestionType.binary)
-                          ...((question.options ??
-                                  (question.type == SurveyQuestionType.binary
-                                      ? ['Yes', 'No']
-                                      : []))
-                              .map((option) {
-                                return RadioListTile<String>(
-                                  title: Text(option),
-                                  value: option,
-                                  groupValue: _answers[question.id],
-                                  onChanged: (val) {
-                                    setState(() => _answers[question.id] = val);
-                                  },
-                                );
-                              })),
+                          RadioGroup<String>(
+                            groupValue: _answers[question.id] as String?,
+                            onChanged: (String? val) {
+                              setState(() => _answers[question.id] = val);
+                            },
+                            child: Column(
+                              children:
+                                  (question.options ??
+                                          (question.type ==
+                                                  SurveyQuestionType.binary
+                                              ? ['Yes', 'No']
+                                              : []))
+                                      .map((option) {
+                                        return ListTile(
+                                          title: Text(option),
+                                          leading: Radio<String>(value: option),
+                                          onTap: () {
+                                            setState(
+                                              () => _answers[question.id] =
+                                                  option,
+                                            );
+                                          },
+                                        );
+                                      })
+                                      .toList(),
+                            ),
+                          ),
                         if (question.type == SurveyQuestionType.slider)
                           Slider(
                             value: (_answers[question.id] as double?) ?? 0.5,

@@ -29,7 +29,7 @@ class AppTheme {
     borderRadius: BorderRadius.circular(20),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.05),
+        color: Colors.black.withValues(alpha: 0.05),
         blurRadius: 15,
         offset: const Offset(0, 4),
       ),
@@ -47,7 +47,7 @@ class AppTheme {
 
       colorScheme: ColorScheme.light(
         primary: primaryBlue,
-        secondary: primaryBlue.withOpacity(0.8),
+        secondary: primaryBlue.withValues(alpha: 0.8),
         surface: surfaceWhite,
         onSurface: textPrimary,
         error: errorColor,

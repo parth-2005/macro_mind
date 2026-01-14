@@ -1,0 +1,7 @@
+﻿Analyzing macro_mind...                                         
+
+   info - Statements in an if should be enclosed in a block - lib\data\repositories\firestore_reward_repository.dart:80:11 - curly_braces_in_flow_control_structures
+   info - Parameter 'key' could be a super parameter - lib\presentation\screens\home\home_screen.dart:17:9 - use_super_parameters
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\presentation\screens\surveys\survey_list_screen.dart:239:37 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\presentation\screens\surveys\survey_list_screen.dart:241:37 - deprecated_member_use
+

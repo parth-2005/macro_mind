@@ -14,7 +14,7 @@ import '../../widgets/background_grid.dart';
 
 /// Feed Screen - Clean Mass-Market Feed Interface
 class FeedScreen extends StatefulWidget {
-  const FeedScreen({Key? key}) : super(key: key);
+  const FeedScreen({super.key});
 
   @override
   State<FeedScreen> createState() => _FeedScreenState();
@@ -110,7 +110,9 @@ class _FeedScreenState extends State<FeedScreen> {
           },
           onSwipe: (previousIndex, currentIndex, direction) {
             final actualIndex = state.currentIndex + previousIndex;
-            if (actualIndex >= state.cards.length) return false;
+            if (actualIndex >= state.cards.length) {
+              return false;
+            }
 
             final card = state.cards[actualIndex];
             final swipedRight = direction == CardSwiperDirection.right;
@@ -216,7 +218,7 @@ class _SwipeOverlay extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: color.withOpacity(opacity * 0.1),
+        color: color.withValues(alpha: opacity * 0.1),
       ),
       child: Center(
         child: Opacity(

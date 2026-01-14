@@ -64,20 +64,25 @@ class FirestoreRewardRepository implements IRewardRepository {
         final rewardRef = _firestore.collection('rewards').doc(rewardId);
         final rewardDoc = await transaction.get(rewardRef);
 
-        if (!rewardDoc.exists) throw Exception('Reward not found');
+        if (!rewardDoc.exists) {
+          throw Exception('Reward not found');
+        }
 
         final rewardData = rewardDoc.data()!;
         final cost = (rewardData['cost'] as num).toInt();
         final stock = (rewardData['stock'] as num).toInt();
 
-        if (stock <= 0) throw Exception('Reward out of stock');
+        if (stock <= 0) {
+          throw Exception('Reward out of stock');
+        }
 
         // 2. Get User details
         final userRef = _firestore.collection('users').doc(user.id);
         final userDoc = await transaction.get(userRef);
 
-        if (!userDoc.exists)
+        if (!userDoc.exists) {
           throw Exception('User record not found in Firestore');
+        }
 
         final userPoints = (userDoc.data()?['points'] as num?)?.toInt() ?? 0;
 

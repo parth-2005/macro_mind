@@ -4,8 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../bloc/auth/auth_bloc.dart';
 import '../../bloc/auth/auth_event.dart';
 import '../../bloc/auth/auth_state.dart';
-import '../../../core/di/injection.dart';
-import '../../../core/services/compatibility_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -13,49 +11,56 @@ class ProfileScreen extends StatelessWidget {
   void _checkCompatibility(BuildContext context, String userId) async {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           bool loading = true;
-          int? result;
+          int? score;
 
-          Future.delayed(const Duration(seconds: 2), () async {
+          Future.delayed(const Duration(seconds: 2), () {
             if (context.mounted) {
-              final service = getIt<CompatibilityService>();
-              final match = await service.getMatchPercentage(
-                userId,
-                "partner_id_mock",
-              );
               setState(() {
                 loading = false;
-                result = match;
+                score = 70 + (DateTime.now().millisecond % 30); // 70-99%
               });
             }
           });
 
           return AlertDialog(
-            title: const Text('Compatibility Scanner'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  loading ? Icons.radar : Icons.favorite,
+                  color: Colors.pink,
+                ),
+                const SizedBox(width: 12),
+                const Text('Scanner'),
+              ],
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (loading) ...[
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  const Text('Scanning partner patterns...'),
+                  const CircularProgressIndicator(color: Colors.pink),
+                  const SizedBox(height: 24),
+                  Text(
+                    "Scanning Partner's Vibe...",
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+                  ),
                 ] else ...[
                   Text(
-                    'Match Found!',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '$result%',
+                    '$score% MATCH!',
                     style: GoogleFonts.inter(
-                      fontSize: 48,
+                      fontSize: 42,
                       fontWeight: FontWeight.w900,
                       color: Colors.pink,
                     ),
                   ),
-                  const Text('Valentine Compatibility'),
+                  const SizedBox(height: 8),
+                  const Text('Perfect Valentine Connection'),
                 ],
               ],
             ),
@@ -63,7 +68,7 @@ class ProfileScreen extends StatelessWidget {
               if (!loading)
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Awesome!'),
+                  child: const Text('AWESOME!'),
                 ),
             ],
           );
@@ -134,7 +139,7 @@ class ProfileScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blue.withOpacity(0.3),
+                      color: Colors.blue.withValues(alpha: 0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 10),
                     ),

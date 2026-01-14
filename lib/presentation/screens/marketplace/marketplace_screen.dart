@@ -160,14 +160,24 @@ class GreenTicketView extends StatefulWidget {
   State<GreenTicketView> createState() => _GreenTicketViewState();
 }
 
-class _GreenTicketViewState extends State<GreenTicketView> {
+class _GreenTicketViewState extends State<GreenTicketView>
+    with SingleTickerProviderStateMixin {
   late Timer _timer;
   int _secondsRemaining = 300;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
     _startTimer();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
   }
 
   void _startTimer() {
@@ -183,10 +193,12 @@ class _GreenTicketViewState extends State<GreenTicketView> {
   @override
   void dispose() {
     _timer.cancel();
+    _pulseController.dispose();
     super.dispose();
   }
 
   String _formatTime(int seconds) {
+    if (seconds <= 0) return '00:00';
     final mins = (seconds / 60).floor();
     final secs = seconds % 60;
     return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
@@ -194,64 +206,86 @@ class _GreenTicketViewState extends State<GreenTicketView> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isExpired = _secondsRemaining <= 0;
+    final Color baseColor = isExpired ? Colors.red : Colors.greenAccent[700]!;
+
     return Scaffold(
-      backgroundColor: Colors.greenAccent[700],
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.check_circle_outline,
-                size: 120,
-                color: Colors.white,
+      backgroundColor: baseColor,
+      body: AnimatedBuilder(
+        animation: _pulseAnimation,
+        builder: (context, child) {
+          return Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                colors: [
+                  baseColor.withValues(
+                    alpha: isExpired ? 1.0 : _pulseAnimation.value,
+                  ),
+                  baseColor,
+                ],
+                radius: 1.5,
               ),
-              const SizedBox(height: 24),
-              Text(
-                'VALID TICKET',
-                style: GoogleFonts.inter(
-                  fontSize: 40,
-                  fontWeight: FontWeight.w900,
+            ),
+            child: child,
+          );
+        },
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isExpired ? Icons.error_outline : Icons.check_circle_outline,
+                  size: 120,
                   color: Colors.white,
-                  letterSpacing: 2,
                 ),
-              ),
-              const SizedBox(height: 40),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: Text(
-                  _formatTime(_secondsRemaining),
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(height: 24),
+                Text(
+                  isExpired ? 'EXPIRED' : 'VALID TICKET',
+                  style: GoogleFonts.inter(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w900,
                     color: Colors.white,
+                    letterSpacing: 2,
                   ),
                 ),
-              ),
-              const SizedBox(height: 64),
-              ElevatedButton(
-                onPressed: widget.onClose,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.greenAccent[700],
+                const SizedBox(height: 40),
+                Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
                     vertical: 16,
                   ),
-                  shape: RoundedRectangleBorder(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(100),
                   ),
+                  child: Text(
+                    _formatTime(_secondsRemaining),
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-                child: const Text('BACK TO MARKET'),
-              ),
-            ],
+                const SizedBox(height: 64),
+                ElevatedButton(
+                  onPressed: widget.onClose,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: baseColor,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                  ),
+                  child: Text(isExpired ? 'CLOSE' : 'BACK TO MARKET'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
