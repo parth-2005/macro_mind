@@ -2,10 +2,75 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../bloc/auth/auth_bloc.dart';
+import '../../bloc/auth/auth_event.dart';
 import '../../bloc/auth/auth_state.dart';
+import '../../../core/di/injection.dart';
+import '../../../core/services/compatibility_service.dart';
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
+
+  void _checkCompatibility(BuildContext context, String userId) async {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          bool loading = true;
+          int? result;
+
+          Future.delayed(const Duration(seconds: 2), () async {
+            if (context.mounted) {
+              final service = getIt<CompatibilityService>();
+              final match = await service.getMatchPercentage(
+                userId,
+                "partner_id_mock",
+              );
+              setState(() {
+                loading = false;
+                result = match;
+              });
+            }
+          });
+
+          return AlertDialog(
+            title: const Text('Compatibility Scanner'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (loading) ...[
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  const Text('Scanning partner patterns...'),
+                ] else ...[
+                  Text(
+                    'Match Found!',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '$result%',
+                    style: GoogleFonts.inter(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.pink,
+                    ),
+                  ),
+                  const Text('Valentine Compatibility'),
+                ],
+              ],
+            ),
+            actions: [
+              if (!loading)
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Awesome!'),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +85,14 @@ class ProfileScreen extends StatelessWidget {
         builder: (context, state) {
           String? name;
           String? photoUrl;
+          int points = 0;
+          String userId = "";
 
           if (state is AuthAuthenticated) {
             name = state.user.displayName;
             photoUrl = state.user.photoUrl;
+            points = state.user.points;
+            userId = state.user.id;
           }
 
           return ListView(
@@ -53,6 +122,7 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 40),
+              // Points Display
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -82,7 +152,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '500',
+                      points.toString(),
                       style: GoogleFonts.jetBrainsMono(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
@@ -92,6 +162,23 @@ class ProfileScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 32),
+
+              // Compatibility Button
+              ElevatedButton.icon(
+                onPressed: () => _checkCompatibility(context, userId),
+                icon: const Icon(Icons.favorite),
+                label: const Text('Check Couple Compatibility'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.pink.shade50,
+                  foregroundColor: Colors.pink,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 32),
               SwitchListTile(
                 title: Text(
@@ -105,18 +192,13 @@ class ProfileScreen extends StatelessWidget {
               ),
               const Divider(height: 40),
               ListTile(
-                leading: const Icon(Icons.help_outline),
-                title: const Text('Support'),
-                onTap: () {},
-              ),
-              ListTile(
                 leading: const Icon(Icons.logout, color: Colors.red),
                 title: const Text(
                   'Logout',
                   style: TextStyle(color: Colors.red),
                 ),
                 onTap: () {
-                  // Logout logic
+                  context.read<AuthBloc>().add(const SignOutRequested());
                 },
               ),
             ],

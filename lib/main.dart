@@ -12,6 +12,7 @@ import 'presentation/bloc/auth/auth_bloc.dart';
 import 'presentation/bloc/auth/auth_event.dart';
 import 'presentation/bloc/auth/auth_state.dart';
 import 'presentation/bloc/reward/reward_bloc.dart';
+import 'presentation/bloc/survey/survey_bloc.dart';
 import 'presentation/screens/main_shell.dart';
 import 'presentation/screens/auth/login_screen.dart';
 
@@ -34,7 +35,7 @@ void main() async {
 }
 
 class MacroMindApp extends StatelessWidget {
-  const MacroMindApp({Key? key}) : super(key: key);
+  const MacroMindApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +55,9 @@ class MacroMindApp extends StatelessWidget {
 
         // Reward BLoC - manages marketplace
         BlocProvider<RewardBloc>(create: (context) => getIt<RewardBloc>()),
+
+        // Survey BLoC - manages surveys/taste tests
+        BlocProvider<SurveyBloc>(create: (context) => getIt<SurveyBloc>()),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) {

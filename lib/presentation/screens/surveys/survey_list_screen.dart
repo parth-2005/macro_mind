@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 
 class SurveyListScreen extends StatefulWidget {
-  const SurveyListScreen({Key? key}) : super(key: key);
+  const SurveyListScreen({super.key});
 
   @override
   State<SurveyListScreen> createState() => _SurveyListScreenState();
@@ -73,7 +73,10 @@ class _SurveyListScreenState extends State<SurveyListScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
-                        BoxShadow(color: Colors.black12, blurRadius: 10),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                        ),
                       ],
                     ),
                     child: Text(
@@ -110,7 +113,7 @@ class _SurveyListScreenState extends State<SurveyListScreen> {
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
+            color: Colors.blue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -132,10 +135,10 @@ class SurveyFormScreen extends StatelessWidget {
   final VoidCallback onComplete;
 
   const SurveyFormScreen({
-    Key? key,
+    super.key,
     required this.title,
     required this.onComplete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -17,6 +17,9 @@ class UserEntity extends Equatable {
   /// Whether this is an anonymous user (no email/password)
   final bool isAnonymous;
 
+  /// User's points for rewards
+  final int points;
+
   /// When the user was created
   final DateTime createdAt;
 
@@ -25,6 +28,7 @@ class UserEntity extends Equatable {
     this.email,
     this.displayName,
     this.photoUrl,
+    this.points = 0,
     required this.isAnonymous,
     required this.createdAt,
   });
@@ -35,6 +39,7 @@ class UserEntity extends Equatable {
     email,
     displayName,
     photoUrl,
+    points,
     isAnonymous,
     createdAt,
   ];

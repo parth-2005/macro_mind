@@ -6,7 +6,7 @@ import 'marketplace/marketplace_screen.dart';
 import 'profile/profile_screen.dart';
 
 class MainShell extends StatefulWidget {
-  const MainShell({Key? key}) : super(key: key);
+  const MainShell({super.key});
 
   @override
   State<MainShell> createState() => _MainShellState();

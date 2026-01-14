@@ -6,12 +6,16 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../services/biometric_service.dart';
 import '../../domain/repositories/card_repository.dart';
 import '../../domain/repositories/i_auth_repository.dart';
+import '../../domain/repositories/i_survey_repository.dart';
 import '../../data/repositories/firestore_card_repository.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
+import '../../data/repositories/firestore_survey_repository.dart';
+import '../../../core/services/compatibility_service.dart';
 import '../../presentation/bloc/theme/theme_bloc.dart';
 import '../../presentation/bloc/feed/feed_bloc.dart';
 import '../../presentation/bloc/auth/auth_bloc.dart';
 import '../../presentation/bloc/reward/reward_bloc.dart';
+import '../../presentation/bloc/survey/survey_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -19,6 +23,9 @@ final getIt = GetIt.instance;
 Future<void> setupDependencies() async {
   // Core Services - Singleton
   getIt.registerLazySingleton<BiometricService>(() => BiometricService());
+  getIt.registerLazySingleton<CompatibilityService>(
+    () => CompatibilityService(),
+  );
 
   // Google Sign-In (v7.x requires singleton access and initialization)
   final googleSignIn = GoogleSignIn.instance;
@@ -32,6 +39,14 @@ Future<void> setupDependencies() async {
   // Firestore Card Repository - Singleton
   getIt.registerLazySingleton<ICardRepository>(
     () => FirestoreCardRepository(
+      firestore: FirebaseFirestore.instance,
+      authRepository: getIt<IAuthRepository>(),
+    ),
+  );
+
+  // Firestore Survey Repository - Singleton
+  getIt.registerLazySingleton<ISurveyRepository>(
+    () => FirestoreSurveyRepository(
       firestore: FirebaseFirestore.instance,
       authRepository: getIt<IAuthRepository>(),
     ),
@@ -52,6 +67,10 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerFactory<RewardBloc>(() => RewardBloc());
+
+  getIt.registerFactory<SurveyBloc>(
+    () => SurveyBloc(surveyRepository: getIt<ISurveyRepository>()),
+  );
 
   // Initialize BiometricService
   await getIt<BiometricService>().initialize();

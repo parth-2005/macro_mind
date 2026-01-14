@@ -7,7 +7,7 @@ import '../../bloc/reward/reward_event.dart';
 import '../../bloc/reward/reward_state.dart';
 
 class MarketplaceScreen extends StatefulWidget {
-  const MarketplaceScreen({Key? key}) : super(key: key);
+  const MarketplaceScreen({super.key});
 
   @override
   State<MarketplaceScreen> createState() => _MarketplaceScreenState();
@@ -15,7 +15,6 @@ class MarketplaceScreen extends StatefulWidget {
 
 class _MarketplaceScreenState extends State<MarketplaceScreen> {
   bool _showTicket = false;
-  String? _redeemedRewardTitle;
 
   @override
   void initState() {
@@ -37,7 +36,6 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              _redeemedRewardTitle = title;
               context.read<RewardBloc>().add(RedeemReward(id));
             },
             child: const Text('Redeem'),
@@ -156,7 +154,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
 
 class GreenTicketView extends StatefulWidget {
   final VoidCallback onClose;
-  const GreenTicketView({Key? key, required this.onClose}) : super(key: key);
+  const GreenTicketView({super.key, required this.onClose});
 
   @override
   State<GreenTicketView> createState() => _GreenTicketViewState();

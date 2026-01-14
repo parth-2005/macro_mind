@@ -5,7 +5,7 @@ import '../../core/theme/app_theme.dart';
 class BackgroundGrid extends StatelessWidget {
   final Widget child;
 
-  const BackgroundGrid({Key? key, required this.child}) : super(key: key);
+  const BackgroundGrid({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
