@@ -31,11 +31,28 @@ class FirestoreCardRepository implements ICardRepository {
           .orderBy('orderIndex')
           .get();
 
-      final cards = snapshot.docs.map((doc) {
-        final data = doc.data();
-        data['id'] = doc.id; // Add document ID to data
-        return CardModel.fromJson(data);
-      }).toList();
+      // Safe mapping: skip invalid documents instead of crashing entire feed
+      final cards = snapshot.docs
+          .map((doc) {
+            try {
+              final data = doc.data();
+              data['id'] = doc.id; // Add document ID to data
+              return CardModel.fromJson(data);
+            } catch (e) {
+              debugPrint(
+                '[FirestoreCardRepository] Error parsing doc ${doc.id}: $e',
+              );
+              return null; // Skip this document
+            }
+          })
+          .whereType<CardModel>()
+          .toList(); // Filter out nulls
+
+      if (cards.isEmpty) {
+        debugPrint(
+          '[FirestoreCardRepository] WARNING: 0 cards found. Check if cards collection is empty OR missing orderIndex field.',
+        );
+      }
 
       debugPrint('[FirestoreCardRepository] Fetched ${cards.length} cards');
       return cards;
@@ -54,11 +71,14 @@ class FirestoreCardRepository implements ICardRepository {
       final currentUser = authRepository.currentUser;
 
       if (currentUser == null) {
+        debugPrint(
+          '[FirestoreCardRepository] ABORT: No authenticated user found during interaction submission',
+        );
         throw Exception('User must be authenticated to submit interaction');
       }
 
       debugPrint(
-        '[FirestoreCardRepository] Submitting interaction for card: $cardId',
+        '[FirestoreCardRepository] Submitting interaction for card: $cardId (User: ${currentUser.id})',
       );
 
       // Convert to model and get JSON
@@ -108,9 +128,20 @@ class FirestoreCardRepository implements ICardRepository {
           .orderBy('timestamp', descending: true)
           .get();
 
-      final interactions = snapshot.docs.map((doc) {
-        return InteractionModel.fromJson(doc.data());
-      }).toList();
+      // Safe mapping: skip invalid documents instead of crashing entire list
+      final interactions = snapshot.docs
+          .map((doc) {
+            try {
+              return InteractionModel.fromJson(doc.data());
+            } catch (e) {
+              debugPrint(
+                '[FirestoreCardRepository] Error parsing interaction ${doc.id}: $e',
+              );
+              return null;
+            }
+          })
+          .whereType<InteractionModel>()
+          .toList();
 
       debugPrint(
         '[FirestoreCardRepository] Fetched ${interactions.length} interactions',

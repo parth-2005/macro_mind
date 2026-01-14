@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../domain/entities/interaction_entity.dart';
 
@@ -10,6 +11,13 @@ class InteractionModel extends InteractionEntity {
     required super.timestamp,
     required super.swipedRight,
   });
+
+  /// Safe date parser that handles Firestore Timestamp, String, or fallback
+  static DateTime _parseDate(dynamic date) {
+    if (date is Timestamp) return date.toDate();
+    if (date is String) return DateTime.parse(date);
+    return DateTime.now(); // Fallback
+  }
 
   /// Create from domain entity
   factory InteractionModel.fromEntity(InteractionEntity entity) {
@@ -36,16 +44,22 @@ class InteractionModel extends InteractionEntity {
     };
   }
 
-  /// Create from JSON (if needed for caching)
+  /// Create from JSON (if needed for caching) - handles both Timestamp and String
   factory InteractionModel.fromJson(Map<String, dynamic> json) {
-    return InteractionModel(
-      touchPath: (json['touchPath'] as List)
-          .map((point) => Offset(point['x'] as double, point['y'] as double))
-          .toList(),
-      gyroVariance: json['gyroVariance'] as double,
-      hesitationMs: json['hesitationMs'] as int,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      swipedRight: json['swipedRight'] as bool,
-    );
+    try {
+      debugPrint('[InteractionModel] Parsing interaction JSON...');
+      return InteractionModel(
+        touchPath: (json['touchPath'] as List)
+            .map((point) => Offset(point['x'] as double, point['y'] as double))
+            .toList(),
+        gyroVariance: (json['gyroVariance'] as num).toDouble(),
+        hesitationMs: (json['hesitationMs'] as num).toInt(),
+        timestamp: _parseDate(json['timestamp']),
+        swipedRight: json['swipedRight'] as bool? ?? false,
+      );
+    } catch (e) {
+      debugPrint('[InteractionModel] Error parsing Interaction JSON: $e');
+      rethrow;
+    }
   }
 }

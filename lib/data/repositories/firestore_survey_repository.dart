@@ -22,40 +22,71 @@ class FirestoreSurveyRepository implements ISurveyRepository {
           .where('isActive', isEqualTo: true)
           .get();
 
-      return snapshot.docs.map((doc) {
-        final data = doc.data();
-        final questionsData = data['questions'] as List<dynamic>;
+      debugPrint(
+        '[FirestoreSurveyRepository] Found ${snapshot.docs.length} active surveys',
+      );
 
-        final questions = questionsData.map((q) {
-          final qMap = q as Map<String, dynamic>;
-          SurveyQuestionType type;
-          switch (qMap['type']) {
-            case 'slider':
-              type = SurveyQuestionType.slider;
-              break;
-            case 'binary':
-            case 'yes_no':
-              type = SurveyQuestionType.binary;
-              break;
-            default:
-              type = SurveyQuestionType.text;
-          }
+      return snapshot.docs
+          .map((doc) {
+            try {
+              final data = doc.data();
+              debugPrint(
+                '[FirestoreSurveyRepository] Parsing survey: ${data['title']} (ID: ${doc.id})',
+              );
 
-          return SurveyQuestion(
-            id: qMap['id'] as String,
-            text: qMap['text'] as String,
-            type: type,
-          );
-        }).toList();
+              final questionsData = data['questions'] as List<dynamic>? ?? [];
 
-        return SurveyEntity(
-          id: doc.id,
-          title: data['title'] as String,
-          description: data['description'] as String,
-          rewardPoints: data['rewardPoints'] as int,
-          questions: questions,
-        );
-      }).toList();
+              final questions = questionsData.map((q) {
+                final qMap = q as Map<String, dynamic>;
+
+                // Map string type to enum
+                SurveyQuestionType qType;
+                final typeStr = qMap['type'] as String? ?? 'text';
+                switch (typeStr) {
+                  case 'slider':
+                    qType = SurveyQuestionType.slider;
+                    break;
+                  case 'binary':
+                    qType = SurveyQuestionType.binary;
+                    break;
+                  case 'multipleChoice':
+                  case 'multiple_choice':
+                    qType = SurveyQuestionType.multipleChoice;
+                    break;
+                  case 'rating':
+                    qType = SurveyQuestionType.rating;
+                    break;
+                  case 'text':
+                  default:
+                    qType = SurveyQuestionType.text;
+                }
+
+                return SurveyQuestion(
+                  id: qMap['id'] as String? ?? '',
+                  text: qMap['text'] as String? ?? '',
+                  type: qType,
+                  options: (qMap['options'] as List?)
+                      ?.map((e) => e.toString())
+                      .toList(),
+                );
+              }).toList();
+
+              return SurveyEntity(
+                id: doc.id,
+                title: data['title'] as String? ?? 'Untitled Survey',
+                description: data['description'] as String? ?? '',
+                rewardPoints: (data['rewardPoints'] as num?)?.toInt() ?? 0,
+                questions: questions,
+              );
+            } catch (e) {
+              debugPrint(
+                '[FirestoreSurveyRepository] CRITICAL: Failed to parse survey doc ${doc.id}: $e',
+              );
+              return null;
+            }
+          })
+          .whereType<SurveyEntity>()
+          .toList();
     } catch (e) {
       debugPrint('[FirestoreSurveyRepository] Error fetching surveys: $e');
       return [];

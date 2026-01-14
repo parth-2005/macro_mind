@@ -1,21 +1,23 @@
 import 'package:equatable/equatable.dart';
 
-enum SurveyQuestionType { slider, text, binary }
+enum SurveyQuestionType { slider, text, binary, multipleChoice, rating }
 
 /// Represents a single question within a survey
 class SurveyQuestion extends Equatable {
   final String id;
   final String text;
   final SurveyQuestionType type;
+  final List<String>? options;
 
   const SurveyQuestion({
     required this.id,
     required this.text,
     required this.type,
+    this.options,
   });
 
   @override
-  List<Object?> get props => [id, text, type];
+  List<Object?> get props => [id, text, type, options];
 }
 
 /// Represents a high-value survey form

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/card_entity.dart';
 
 /// Data model for CardEntity with JSON serialization
@@ -13,6 +15,13 @@ class CardModel extends CardEntity {
     required super.createdAt,
   });
 
+  /// Safe date parser that handles Firestore Timestamp, String, or fallback
+  static DateTime _parseDate(dynamic date) {
+    if (date is Timestamp) return date.toDate();
+    if (date is String) return DateTime.parse(date);
+    return DateTime.now(); // Fallback for missing/null dates
+  }
+
   /// Create from domain entity
   factory CardModel.fromEntity(CardEntity entity) {
     return CardModel(
@@ -27,18 +36,27 @@ class CardModel extends CardEntity {
     );
   }
 
-  /// Create from JSON (API response)
+  /// Create from JSON (API response) - handles both Timestamp and String formats
   factory CardModel.fromJson(Map<String, dynamic> json) {
-    return CardModel(
-      id: json['id'] as String,
-      question: json['question'] as String,
-      imageUrl: json['imageUrl'] as String?,
-      imageLeftUrl: json['imageLeftUrl'] as String?,
-      imageRightUrl: json['imageRightUrl'] as String?,
-      audioUrl: json['audioUrl'] as String?,
-      category: json['category'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-    );
+    try {
+      final id = json['id'] as String? ?? 'unknown';
+      debugPrint('[CardModel] Parsing JSON for ID: $id');
+
+      return CardModel(
+        id: id,
+        question: json['question'] as String? ?? 'No question provided',
+        imageUrl: json['imageUrl'] as String?,
+        imageLeftUrl: json['imageLeftUrl'] as String?,
+        imageRightUrl: json['imageRightUrl'] as String?,
+        audioUrl: json['audioUrl'] as String?,
+        category: json['category'] as String? ?? 'General',
+        createdAt: _parseDate(json['createdAt']),
+      );
+    } catch (e) {
+      debugPrint('[CardModel] CRITICAL: Failed to parse Card JSON: $e');
+      debugPrint('[CardModel] problematic JSON: $json');
+      rethrow;
+    }
   }
 
   /// Convert to JSON

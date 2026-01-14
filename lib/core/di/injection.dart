@@ -10,6 +10,8 @@ import '../../domain/repositories/i_survey_repository.dart';
 import '../../data/repositories/firestore_card_repository.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
 import '../../data/repositories/firestore_survey_repository.dart';
+import '../../data/repositories/firestore_reward_repository.dart';
+import '../../domain/repositories/i_reward_repository.dart';
 import '../../../core/services/compatibility_service.dart';
 import '../../presentation/bloc/theme/theme_bloc.dart';
 import '../../presentation/bloc/feed/feed_bloc.dart';
@@ -52,6 +54,14 @@ Future<void> setupDependencies() async {
     ),
   );
 
+  // Firestore Reward Repository - Singleton
+  getIt.registerLazySingleton<IRewardRepository>(
+    () => FirestoreRewardRepository(
+      firestore: FirebaseFirestore.instance,
+      authRepository: getIt<IAuthRepository>(),
+    ),
+  );
+
   // BLoCs - Factory (new instance per request)
   getIt.registerFactory<ThemeBloc>(() => ThemeBloc());
 
@@ -66,7 +76,9 @@ Future<void> setupDependencies() async {
     ),
   );
 
-  getIt.registerFactory<RewardBloc>(() => RewardBloc());
+  getIt.registerFactory<RewardBloc>(
+    () => RewardBloc(rewardRepository: getIt<IRewardRepository>()),
+  );
 
   getIt.registerFactory<SurveyBloc>(
     () => SurveyBloc(surveyRepository: getIt<ISurveyRepository>()),

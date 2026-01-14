@@ -50,7 +50,8 @@ def seed_data():
             }
         ]
 
-        for card in valentine_cards:
+        for i, card in enumerate(valentine_cards):
+            card["orderIndex"] = i
             cards_ref.add(card)
         print(f"Seeded {len(valentine_cards)} cards.")
 
@@ -64,6 +65,7 @@ def seed_data():
                 "title": "Valentine's Personality Quiz",
                 "description": "Tell us about your ideal date and unlock big rewards!",
                 "rewardPoints": 500,
+                "isActive": True,
                 "questions": [
                     {"id": "q1", "text": "What's your ideal gift?", "type": "text"},
                     {"id": "q2", "text": "Are you a romantic? (1-10)", "type": "slider"},
@@ -74,6 +76,7 @@ def seed_data():
                 "title": "Dating App Feedback",
                 "description": "How can we make matching more meaningful?",
                 "rewardPoints": 300,
+                "isActive": True,
                 "questions": [
                     {"id": "q1", "text": "Rate our new compatibility engine", "type": "slider"},
                     {"id": "q2", "text": "Would you pay for premium matching?", "type": "binary"}

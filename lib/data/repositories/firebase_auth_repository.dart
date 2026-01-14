@@ -13,22 +13,30 @@ class FirebaseAuthRepository implements IAuthRepository {
   final GoogleSignIn _googleSignIn;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  FirebaseAuthRepository(this._firebaseAuth, this._googleSignIn);
+  FirebaseAuthRepository(this._firebaseAuth, this._googleSignIn) {
+    // Initialize stream listener to update cached user
+    user.listen((updatedUser) {
+      _cachedUser = updatedUser;
+    });
+  }
+
+  UserEntity? _cachedUser;
 
   @override
   Stream<UserEntity?> get user {
     return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
-      if (firebaseUser == null) return null;
-      return await _mapFirebaseUserToEntity(firebaseUser);
+      if (firebaseUser == null) {
+        _cachedUser = null;
+        return null;
+      }
+      final userEntity = await _mapFirebaseUserToEntity(firebaseUser);
+      _cachedUser = userEntity;
+      return userEntity;
     });
   }
 
   @override
-  UserEntity? get currentUser {
-    // Note: This won't have updated points immediately if using a sync getter.
-    // In a real app, you'd want a Stream or a refresh mechanism.
-    return null; // Force use of the Stream for points sync
-  }
+  UserEntity? get currentUser => _cachedUser;
 
   @override
   Future<UserEntity> signInWithGoogle() async {

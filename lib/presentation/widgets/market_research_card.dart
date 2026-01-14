@@ -25,7 +25,7 @@ class MarketResearchCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
-              color: AppTheme.primaryBlue.withValues(alpha: 0.08),
+              color: AppTheme.primaryBlue.withOpacity(0.08),
               borderRadius: BorderRadius.circular(100),
             ),
             child: Text(
@@ -101,7 +101,7 @@ class _InteractionHint extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: AppTheme.borderLight),
           ),
-          child: Icon(icon, color: color.withValues(alpha: 0.7), size: 24),
+          child: Icon(icon, color: color.withOpacity(0.7), size: 24),
         ),
         const SizedBox(height: 8),
         Text(
