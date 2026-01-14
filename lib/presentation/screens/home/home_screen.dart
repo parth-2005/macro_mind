@@ -12,15 +12,15 @@ import '../../bloc/feed/feed_state.dart';
 import '../../widgets/market_research_card.dart';
 import '../../widgets/background_grid.dart';
 
-/// Home Screen - Clean Mass-Market Feed Interface
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+/// Feed Screen - Clean Mass-Market Feed Interface
+class FeedScreen extends StatefulWidget {
+  const FeedScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<FeedScreen> createState() => _FeedScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _FeedScreenState extends State<FeedScreen> {
   final CardSwiperController _swiperController = CardSwiperController();
   late final BiometricService _biometricService;
 
@@ -39,65 +39,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: Text(
-          'MacroMind',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.account_circle_outlined),
-            onPressed: () {
-              // Profile action
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: BackgroundGrid(
-        child: BlocBuilder<FeedBloc, FeedState>(
-          builder: (context, state) {
-            return SafeArea(
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-
-                  // 2. Feed Content
-                  Expanded(
-                    child: Builder(
-                      builder: (context) {
-                        if (state is FeedLoading) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-
-                        if (state is FeedError) {
-                          return _buildErrorState(context, state);
-                        }
-
-                        if (state is FeedEmpty) {
-                          return _buildEmptyState(context, state);
-                        }
-
-                        if (state is FeedLoaded) {
-                          return _buildFeed(context, state);
-                        }
-
-                        return const SizedBox.shrink();
-                      },
-                    ),
+    return BackgroundGrid(
+      child: BlocBuilder<FeedBloc, FeedState>(
+        builder: (context, state) {
+          return SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Builder(
+                    builder: (context) {
+                      if (state is FeedLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (state is FeedError) {
+                        return _buildErrorState(context, state);
+                      }
+                      if (state is FeedEmpty) {
+                        return _buildEmptyState(context, state);
+                      }
+                      if (state is FeedLoaded) {
+                        return _buildFeed(context, state);
+                      }
+                      return const SizedBox.shrink();
+                    },
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

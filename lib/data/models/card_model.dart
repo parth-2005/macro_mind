@@ -6,6 +6,9 @@ class CardModel extends CardEntity {
     required super.id,
     required super.question,
     super.imageUrl,
+    super.imageLeftUrl,
+    super.imageRightUrl,
+    super.audioUrl,
     required super.category,
     required super.createdAt,
   });
@@ -16,6 +19,9 @@ class CardModel extends CardEntity {
       id: entity.id,
       question: entity.question,
       imageUrl: entity.imageUrl,
+      imageLeftUrl: entity.imageLeftUrl,
+      imageRightUrl: entity.imageRightUrl,
+      audioUrl: entity.audioUrl,
       category: entity.category,
       createdAt: entity.createdAt,
     );
@@ -27,6 +33,9 @@ class CardModel extends CardEntity {
       id: json['id'] as String,
       question: json['question'] as String,
       imageUrl: json['imageUrl'] as String?,
+      imageLeftUrl: json['imageLeftUrl'] as String?,
+      imageRightUrl: json['imageRightUrl'] as String?,
+      audioUrl: json['audioUrl'] as String?,
       category: json['category'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
@@ -38,6 +47,9 @@ class CardModel extends CardEntity {
       'id': id,
       'question': question,
       'imageUrl': imageUrl,
+      'imageLeftUrl': imageLeftUrl,
+      'imageRightUrl': imageRightUrl,
+      'audioUrl': audioUrl,
       'category': category,
       'createdAt': createdAt.toIso8601String(),
     };

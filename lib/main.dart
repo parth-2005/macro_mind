@@ -11,7 +11,8 @@ import 'presentation/bloc/feed/feed_bloc.dart';
 import 'presentation/bloc/auth/auth_bloc.dart';
 import 'presentation/bloc/auth/auth_event.dart';
 import 'presentation/bloc/auth/auth_state.dart';
-import 'presentation/screens/home/home_screen.dart';
+import 'presentation/bloc/reward/reward_bloc.dart';
+import 'presentation/screens/main_shell.dart';
 import 'presentation/screens/auth/login_screen.dart';
 
 void main() async {
@@ -50,6 +51,9 @@ class MacroMindApp extends StatelessWidget {
 
         // Feed BLoC - manages card feed
         BlocProvider<FeedBloc>(create: (context) => getIt<FeedBloc>()),
+
+        // Reward BLoC - manages marketplace
+        BlocProvider<RewardBloc>(create: (context) => getIt<RewardBloc>()),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) {
@@ -66,7 +70,7 @@ class MacroMindApp extends StatelessWidget {
             home: BlocBuilder<AuthBloc, AuthState>(
               builder: (context, authState) {
                 if (authState is AuthAuthenticated) {
-                  return const HomeScreen();
+                  return const MainShell();
                 } else {
                   // Show login screen if not authenticated
                   return const LoginScreen();

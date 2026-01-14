@@ -11,6 +11,7 @@ import '../../data/repositories/firebase_auth_repository.dart';
 import '../../presentation/bloc/theme/theme_bloc.dart';
 import '../../presentation/bloc/feed/feed_bloc.dart';
 import '../../presentation/bloc/auth/auth_bloc.dart';
+import '../../presentation/bloc/reward/reward_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -49,6 +50,8 @@ Future<void> setupDependencies() async {
       biometricService: getIt<BiometricService>(),
     ),
   );
+
+  getIt.registerFactory<RewardBloc>(() => RewardBloc());
 
   // Initialize BiometricService
   await getIt<BiometricService>().initialize();
